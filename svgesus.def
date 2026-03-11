@@ -1,0 +1,6 @@
+LIBRARY svgesus
+EXPORTS
+    DllCanUnloadNow
+    DllGetClassObject
+    DllRegisterServer
+    DllUnregisterServer

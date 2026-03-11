@@ -1,0 +1,9 @@
+/bin/
+/.dub/
+dub.selections.json
+*.obj
+*.o
+*.exp
+*.lib
+*.pdb
+/tests/svg-samples/

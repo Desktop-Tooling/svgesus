@@ -1,0 +1,39 @@
+= Deployment and winget
+
+== GitHub release
+
+1. Create repo `AMDphreak/svgesus` on GitHub.
+2. Tag a version and push: `git tag v1.0.0 && git push origin v1.0.0`.
+3. Create a *Release* for that tag. Attach:
+   * `svgesus-x64-v1.0.0.msi` (or a zip containing the DLL + install script).
+
+== Installer (MSI or exe)
+
+To make the extension installable by non-admins or via winget:
+
+* Build the DLL (see README).
+* Use an installer that:
+** Copies `svgesus.dll` to a program folder (e.g. `%LocalAppData%\Programs\svgesus\` or `%ProgramFiles%\svgesus\`).
+** Runs `regsvr32` with admin rights (or registers the COM server via custom actions).
+* Options:
+** WiX Toolset (MSI): create a WiX project that installs the DLL and runs Regsvr32.
+** Inno Setup / NSIS: same idea; run Regsvr32 in “[Run]” or equivalent.
+** A simple “install.ps1” that copies the DLL and calls `regsvr32` (user runs as Admin) is enough for manual install; winget can run such a script or an MSI.
+
+== winget
+
+To get the package into the official winget repository:
+
+1. Publish a *stable* installer URL (e.g. GitHub Releases: `https://github.com/AMDphreak/svgesus/releases/download/v1.0.0/svgesus-1.0.0-x64.msi`).
+2. Install `wingetcreate`: `winget install Microsoft.wingetcreate`.
+3. Run: `wingetcreate new` and follow the prompts; use the installer URL and package id e.g. `AMDphreak.svgesus`.
+4. Submit a PR to the https://github.com/microsoft/winget-pkgs[winget-pkgs] repo with the generated manifest (YAML).
+
+Package id suggestion: `AMDphreak.svgesus`. Name: “svgesus (SVG Jesus)”.
+
+Once the PR is merged, users can install with:
+
+[source,powershell]
+----
+winget install AMDphreak.svgesus
+----

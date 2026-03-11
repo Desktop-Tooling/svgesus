@@ -1,0 +1,37 @@
+name "svgesus"
+description "Windows SVG thumbnail shell extension (SVG Jesus)"
+authors "AMDphreak"
+license "MIT"
+targetType "dynamicLibrary"
+targetPath "bin"
+targetName "svgesus"
+
+sourceFiles "source/app.d" "source/thumbnail_handler.d" "source/nanosvg_bind.d"
+
+# NanoSVG C part: pre-build with gcc or cl (dmd -mc fails on MSVC pragmas in headers).
+# Requires: run scripts/fetch_nanosvg.ps1 once; have gcc (MinGW) or cl (VS) in PATH.
+preBuildCommands "powershell -NoProfile -File scripts/build_nanosvg.ps1"
+lflags "-L+bin/nanosvg_impl.obj"
+lflags-windows "/DEF:svgesus.def"
+dflags-windows "-m64"
+
+platforms "windows-x86_64"
+
+configuration "dmd-debug" {
+    targetPath "bin\\dmd"
+    dflags "-g"
+}
+
+configuration "ldc-debug" {
+    targetPath "bin\\ldc"
+    dflags "-g"
+}
+
+configuration "perf" {
+    targetType "executable"
+    targetName "svgesus-perf"
+    targetPath "bin"
+    sourceFiles "tests/perf_runner.d" "source/nanosvg_bind.d"
+    preBuildCommands "powershell -NoProfile -File scripts/build_nanosvg.ps1"
+    lflags "-L+bin/nanosvg_impl.obj"
+}

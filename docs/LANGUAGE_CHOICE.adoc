@@ -1,0 +1,57 @@
+= Language and SVG Engine Choice (The Debate)
+
+This doc explains why we use D and an existing C SVG library instead of writing an SVG engine from scratch or picking another language.
+
+== The short version
+
+* We use **D** for the shell extension and **NanoSVG (C)** for SVG rasterization.
+* We do **not** implement a new SVG engine in D; we bind to a small, proven C library.
+* Thumbnail caching issues are usually from the handler failing sometimes or returning inconsistent sizes—we avoid that.
+
+== Why not “make an SVG engine in D”?
+
+An SVG “engine” means parsing and rendering the full SVG spec (paths, transforms, gradients, text, filters, etc.). That is a **multi‑year** project, not a thumbnailer side feature.
+
+* SVG 1.1 is huge: paths, Bézier curves, transforms, gradients, patterns, text, fonts, filters, masking, clipping, etc.
+* Implementations like librsvg or resvg are large, long‑lived codebases.
+* For a thumbnail handler we only need: parse SVG → rasterize to a bitmap at a given size. So we **reuse** an existing engine.
+
+So: “Is it reasonable to make an SVG engine in D?” → For this project, **no**. We use a C library from D instead.
+
+== SVG library performance (what actually matters for thumbnails)
+
+For **small thumbnails** (e.g. 256×256), the bottleneck is usually:
+
+* Disk I/O (reading the .svg file).
+* COM and Explorer, not the rasterizer.
+
+So any decent SVG rasterizer is “fast enough” for thumbnails. Comparison in practice:
+
+* **librsvg (C/GNOME)**: Mature, full‑featured. On Windows you pull in Cairo, Pango, etc.—heavy.
+* **resvg (Rust)**: Fast, portable, static SVG 1.1 subset; used by many apps. Not used *inside* our D DLL.
+* **NanoSVG (C)**: Parser + rasterizer in a few files, no extra deps. Easy to ship as part of our project and bind from D. Good enough for most SVG thumbnails.
+
+We care more about: **no extra runtime**, **single DLL**, **reliable results** so Explorer can cache. NanoSVG fits that.
+
+== D vs Rust vs C++ for this extension
+
+* **Rust**: Great Windows/COM story (e.g. ThioJoe’s thumbnailer). If his doesn’t work for you, common causes: installer didn’t register the COM server, wrong architecture (x64 vs ARM64), or Explorer cache/OneDrive quirks.
+* **C++**: “Native” choice for COM; more boilerplate.
+* **D**: Produces a normal Windows DLL, can call C (NanoSVG) easily, has `core.sys.windows.*` and COM support. Less thumbnail‑handler examples than Rust/C++, but perfectly viable.
+
+We chose D for this project for variety and to use a C SVG library without dragging in Rust’s build or C++’s verbosity. The extension is a single DLL that implements the COM thumbnail provider and calls NanoSVG to rasterize.
+
+== Multithreading
+
+Explorer may call our handler from different threads. So we must be **thread‑safe**: no global mutable state in the rasterizer, and correct COM usage. We don’t “batch” thumbnails inside our process; each call is one file. “Multithreaded” here means: our code is safe when Explorer calls it concurrently.
+
+== Why thumbnails might not seem cached
+
+Windows caches thumbnails in `%LocalAppData%\Microsoft\Windows\Explorer\` (e.g. `thumbcache_*.db`). You see re‑renders or inconsistent behavior when:
+
+* The handler **fails** for some files or sometimes (e.g. timeout, crash, or wrong COM result) → Explorer doesn’t cache that result.
+* The handler returns **different sizes or content** for the “same” request → cache can be invalidated or not used.
+* OneDrive “Files On‑Demand” or similar: file isn’t fully local, so thumbnail generation can fail or be skipped.
+* Cache corrupted or cleared (e.g. after updates, or manual delete).
+
+So we: return a **stable** bitmap for a given (file, size), avoid intermittent failures, and document that disabling process isolation can help (see registration section).

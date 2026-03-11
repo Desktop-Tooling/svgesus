@@ -1,0 +1,60 @@
+= svgesus — SVG Jesus: Windows SVG thumbnail shell extension
+
+A Windows Explorer shell extension that shows SVG file thumbnails in D. Uses NanoSVG (C) for rasterization and implements the COM IThumbnailProvider + IInitializeWithStream interfaces. Thread-safe and designed to behave consistently so Windows can cache thumbnails.
+
+== Prerequisites
+
+* Windows 10/11 x64
+* D compiler (dmd or ldc)
+* Visual Studio Build Tools with `cl` in PATH (e.g. any VS with C++ workload, or Build Tools only)
+* Run once: `scripts/fetch_nanosvg.ps1` to download NanoSVG headers
+
+For developers who just want to build from source and already have `winget`, you can install the Build Tools with:
+
+[source,powershell]
+----
+winget install --id Microsoft.VisualStudio.2022.BuildTools -e
+----
+
+== Build
+
+[source,powershell]
+----
+# One-time: fetch NanoSVG headers
+.\scripts\fetch_nanosvg.ps1
+
+# Build DLL (pre-build compiles NanoSVG C with cl)
+dub build
+
+# Optional: compare dmd vs ldc builds
+.\scripts\build_dmd.ps1
+.\scripts\build_llvm.ps1
+----
+
+Output: `bin/svgesus.dll`.
+
+== Install (manual)
+
+1. Copy `bin/svgesus.dll` to a permanent location (e.g. `C:\Program Files\svgesus\svgesus.dll`).
+2. Run as Administrator: `regsvr32 "C:\Program Files\svgesus\svgesus.dll"`.
+3. Restart Explorer or log off and back on.
+
+Uninstall: run `regsvr32 /u "C:\Program Files\svgesus\svgesus.dll"` (as Admin).
+
+== Why thumbnails might not cache
+
+Windows caches thumbnails in `%LocalAppData%\Microsoft\Windows\Explorer\`. If some thumbnails re-render every time:
+
+* The handler may be failing intermittently (so Explorer does not cache).
+* OneDrive “Files On-Demand” can prevent local thumbnail generation.
+* Try: Folder Options → View → ensure “Always show icons, never thumbnails” is *unchecked*.
+
+We register with `DisableProcessIsolation = 1` so the handler runs in-process; that can improve reliability and caching.
+
+== Language and design
+
+See `docs/LANGUAGE_CHOICE.adoc` for why we use D + NanoSVG and why we did not implement an SVG engine in D.
+
+== License
+
+MIT.
