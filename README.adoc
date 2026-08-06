@@ -1,60 +1,90 @@
+ifndef::env-github[:icons: font]
+:toc: preamble
+:toclevels: 2
+:sectanchors:
+
+image:https://img.shields.io/github/contributors/AMDphreak/svgesus.svg?style=for-the-badge[Contributors]
+image:https://img.shields.io/github/forks/AMDphreak/svgesus.svg?style=for-the-badge[Forks]
+image:https://img.shields.io/github/stars/AMDphreak/svgesus.svg?style=for-the-badge[Stars]
+image:https://img.shields.io/github/issues/AMDphreak/svgesus.svg?style=for-the-badge[Issues]
+
 = svgesus — SVG Jesus: Windows SVG thumbnail shell extension
 
-A Windows Explorer shell extension that shows SVG file thumbnails in D. Uses NanoSVG (C) for rasterization and implements the COM IThumbnailProvider + IInitializeWithStream interfaces. Thread-safe and designed to behave consistently so Windows can cache thumbnails.
+Windows Explorer shell extension that shows SVG thumbnails (D + NanoSVG). Implements COM `IThumbnailProvider` + `IInitializeWithStream`.
 
-== Prerequisites
+link:https://github.com/AMDphreak/svgesus/issues[Report Bug] ·
+link:https://github.com/AMDphreak/svgesus/issues[Request Feature]
+
+== About The Project
+
+Thread-safe thumbnail provider designed so Windows can cache SVG previews consistently. Rasterization uses NanoSVG (C); the shell extension is written in D.
+
+=== Built With
+
+* D (dmd / ldc)
+* NanoSVG (C)
+* Visual Studio Build Tools (`cl`)
+
+== Getting Started
+
+=== Prerequisites
 
 * Windows 10/11 x64
 * D compiler (dmd or ldc)
-* Visual Studio Build Tools with `cl` in PATH (e.g. any VS with C++ workload, or Build Tools only)
+* Visual Studio Build Tools with `cl` in PATH
 * Run once: `scripts/fetch_nanosvg.ps1` to download NanoSVG headers
 
-For developers who just want to build from source and already have `winget`, you can install the Build Tools with:
+Optional Build Tools install:
 
 [source,powershell]
 ----
 winget install --id Microsoft.VisualStudio.2022.BuildTools -e
 ----
 
-== Build
+=== Build
 
 [source,powershell]
 ----
-# One-time: fetch NanoSVG headers
 .\scripts\fetch_nanosvg.ps1
-
-# Build DLL (pre-build compiles NanoSVG C with cl)
 dub build
-
-# Optional: compare dmd vs ldc builds
+# Optional:
 .\scripts\build_dmd.ps1
 .\scripts\build_llvm.ps1
 ----
 
 Output: `bin/svgesus.dll`.
 
-== Install (manual)
+=== Install (manual)
 
 1. Copy `bin/svgesus.dll` to a permanent location (e.g. `C:\Program Files\svgesus\svgesus.dll`).
 2. Run as Administrator: `regsvr32 "C:\Program Files\svgesus\svgesus.dll"`.
 3. Restart Explorer or log off and back on.
 
-Uninstall: run `regsvr32 /u "C:\Program Files\svgesus\svgesus.dll"` (as Admin).
+Uninstall: `regsvr32 /u "C:\Program Files\svgesus\svgesus.dll"` (as Admin).
 
-== Why thumbnails might not cache
+== Usage
 
-Windows caches thumbnails in `%LocalAppData%\Microsoft\Windows\Explorer\`. If some thumbnails re-render every time:
+After registration, SVG files should show thumbnails in Explorer. If caching fails:
 
-* The handler may be failing intermittently (so Explorer does not cache).
-* OneDrive “Files On-Demand” can prevent local thumbnail generation.
-* Try: Folder Options → View → ensure “Always show icons, never thumbnails” is *unchecked*.
+* Handler may be failing intermittently (Explorer skips cache).
+* OneDrive Files On-Demand can block local thumbnail generation.
+* Folder Options → View → ensure “Always show icons, never thumbnails” is unchecked.
 
-We register with `DisableProcessIsolation = 1` so the handler runs in-process; that can improve reliability and caching.
+Registered with `DisableProcessIsolation = 1` for in-process reliability.
 
-== Language and design
+See `docs/LANGUAGE_CHOICE.adoc` for language/design notes.
 
-See `docs/LANGUAGE_CHOICE.adoc` for why we use D + NanoSVG and why we did not implement an SVG engine in D.
+== Contributing
+
+Fork, branch, and open a pull request.
 
 == License
 
 MIT.
+
+== Contact
+
+Ryan Johnson — https://twitter.com/amdphreak[@amdphreak]
+
+* Project: https://github.com/AMDphreak/svgesus
+* Site: https://ryanjohnson.dev
