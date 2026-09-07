@@ -1,0 +1,35 @@
+= SVGesus
+:description: Windows shell extension that renders SVG files as File Explorer thumbnails.
+:page-audience: Windows users and contributors evaluating SVG thumbnail support
+:page-usage-context: Product overview with build, installation, and troubleshooting pointers
+:page-orig-author: Ryan Johnson
+:page-last-author: Cursor agent on behalf of Ryan Johnson
+:page-last-edited: 2026-09-07
+
+ifndef::page-context-active[]
+[.page-context.page-context-lead]
+****
+Audience:: {page-audience}
+****
+endif::[]
+
+SVGesus is a Windows thumbnail provider for SVG files. The shell extension implements `IThumbnailProvider` and `IInitializeWithStream` in D, then uses NanoSVG to rasterize previews for File Explorer's thumbnail cache.
+
+== Build and install
+
+Builds require Windows 10 or 11, a D compiler, and Visual Studio Build Tools. Fetch the NanoSVG headers with `scripts/fetch_nanosvg.ps1`, run `dub build`, and register the resulting `bin/svgesus.dll` from its permanent installation location with `regsvr32`.
+
+The project README contains the current commands and manual uninstall instructions.
+
+== Troubleshooting
+
+If Explorer does not show previews, confirm that "Always show icons, never thumbnails" is disabled. Explorer cache behavior and OneDrive Files On-Demand can also prevent local thumbnail generation.
+
+ifndef::page-context-active[]
+[.page-context.page-context-footer]
+****
+Original author:: {page-orig-author}
+Latest contributor:: {page-last-author}
+Last updated:: {page-last-edited}
+****
+endif::[]

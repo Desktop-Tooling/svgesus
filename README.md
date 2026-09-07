@@ -8,6 +8,9 @@
   <h1>svgesus — SVG Jesus</h1>
   <p>Windows SVG thumbnail shell extension (D + NanoSVG). Implements COM <code>IThumbnailProvider</code> + <code>IInitializeWithStream</code>.</p>
   <p>
+    <a href="https://desktop-tooling.github.io/docs/svgesus/"><strong>Explore the docs »</strong></a>
+    <br />
+    <br />
     <a href="https://github.com/AMDphreak/svgesus/issues">Report Bug</a>
     &middot;
     <a href="https://github.com/AMDphreak/svgesus/issues">Request Feature</a>
@@ -109,6 +112,10 @@ Fork, branch, and open a pull request.
 For per-person profile links, prefer [all-contributors](https://allcontributors.org/).
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md) for the project history.
 
 ## License
 
